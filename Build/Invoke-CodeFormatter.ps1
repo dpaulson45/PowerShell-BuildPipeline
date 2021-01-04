@@ -20,6 +20,8 @@ foreach ($line in $content) {
     $stringContent += "{0}`r`n" -f $line
 }
 
+$stringContent = $stringContent.Trim()
+
 try {
 
     if ($null -eq (Get-Module -Name PSScriptAnalyzer)) {
@@ -27,13 +29,15 @@ try {
     }
 
     $formattedScript = Invoke-Formatter $stringContent -Settings $CodeFormattingLocation
+    $formattedScript = $formattedScript.TrimEnd()
 
     if ($ReturnFormattedScript) {
         return $formattedScript
     }
 
     $fileName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptLocation)
-    $formattedScript | Out-File -FilePath ($ScriptLocation.Replace($fileName, ($fileName + ".Formatted")))
+    $directory = [System.IO.Path]::GetDirectoryName($ScriptLocation)
+    $formattedScript | Out-File -FilePath ("{0}\{1}" -f $directory, $fileName.Replace($fileName, ($fileName + ".Formatted.ps1")))
 }
 catch {
     throw

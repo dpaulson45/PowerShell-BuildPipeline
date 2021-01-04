@@ -24,14 +24,19 @@ if ($CodeFormatCheck) {
         [string]$path = $configItem.Path
         
         if ($path.EndsWith("\")) {
-            $files = Get-ChildItem $path | Where-Object { $_.Name.EndsWith(".ps1") }
+
+            if ($configItem.IncludeRecurse) {
+                $files = Get-ChildItem $path -Recurse | Where-Object { $_.Name.EndsWith(".ps1") }
+            } else {
+                $files = Get-ChildItem $path | Where-Object { $_.Name.EndsWith(".ps1") }
+            }
+            
             foreach ($item in $files) {
                 if (!$allFiles.Contains($item.VersionInfo.FileName)) {
                     $allFiles += $item.VersionInfo.FileName
                 }
             }
-        }
-        elseif ($allFiles.Contains($path)) {
+        } elseif ($allFiles.Contains($path)) {
             $allFiles += (Get-ChildItem $path).VersionInfo.FileName
         }
     }
@@ -43,8 +48,15 @@ if ($CodeFormatCheck) {
         $testFormat = .\Invoke-CodeFormatter.ps1 -ScriptLocation $file -CodeFormattingLocation .\CodeFormatting.psd1 -ReturnFormattedScript
 
         $content = Get-Content $file
+        $stringContent = [string]::Empty
 
-        if ($testFormat -ne $content) {
+        foreach ($line in $content) {
+            $stringContent += "{0}`r`n" -f $line
+        }
+
+        $stringContent = $stringContent.TrimEnd()
+
+        if ($testFormat -ne $stringContent) {
             $failedFiles += $file
         }
     }
@@ -60,6 +72,8 @@ if ($CodeFormatCheck) {
 
 if ($BuildScript) {
     foreach ($configItem in $jsonConfig) {
-        .\Invoke-BuildScript.ps1 -Configuration $configItem
+        if (!$configItem.BuildScriptDisabled) {
+            .\Invoke-BuildScript.ps1 -Configuration $configItem
+        }
     }
 }
