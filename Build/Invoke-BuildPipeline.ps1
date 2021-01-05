@@ -41,30 +41,30 @@ if ($CodeFormatCheck) {
         }
     }
 
-    $failedFiles = @()
-
+    $filesFailed = $false
     foreach ($file in $allFiles) {
 
-        $testFormat = .\Invoke-CodeFormatter.ps1 -ScriptLocation $file -CodeFormattingLocation .\CodeFormatting.psd1 -ReturnFormattedScript
+        $scriptFormatter = .\Invoke-CodeFormatter.ps1 -ScriptLocation $file -CodeFormattingLocation .\CodeFormatting.psd1 -ScriptAnalyzer
 
-        $content = Get-Content $file
-        $stringContent = [string]::Empty
+        if ($scriptFormatter.StringContent -ne $scriptFormatter.FormattedScript -or
+            $null -ne $scriptFormatter.AnalyzedResults) {
 
-        foreach ($line in $content) {
-            $stringContent += "{0}`r`n" -f $line
-        }
+            $filesFailed = $true
+            Write-Host ("{0}:" -f $file)
 
-        $stringContent = $stringContent.TrimEnd()
-
-        if ($testFormat -ne $stringContent) {
-            $failedFiles += $file
+            if ($scriptFormatter.StringContent -ne $scriptFormatter.FormattedScript) {
+                Write-Host ("Failed to follow the same format defined in the repro")
+            }
+            
+            if ($null -ne $scriptFormatter.AnalyzedResults) {
+                Write-Host ("Failed Results from Invoke-PSScriptAnalyzer:")
+            }
+            
+            Write-Output("{0}`r`n`r`n" -f $scriptFormatter.AnalyzedResults)
         }
     }
 
-    if ($failedFiles.Count -ge 1) {
-        foreach ($failedFile in $failedFiles) {
-            Write-Host $failedFile
-        }
+    if ($filesFailed) {
 
         throw "Failed to match coding formatting requirements for the project"
     }
