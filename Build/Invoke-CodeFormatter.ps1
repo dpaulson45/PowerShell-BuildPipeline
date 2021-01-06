@@ -32,8 +32,7 @@ try {
     $formattedScript = Invoke-Formatter $stringContent -Settings $CodeFormattingLocation
     $formattedScript = $formattedScript.TrimEnd()
 
-    if ($OutputFormattedScript)
-    {
+    if ($OutputFormattedScript) {
         $fileName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptLocation)
         $directory = [System.IO.Path]::GetDirectoryName($ScriptLocation)
         $formattedScript | Out-File -FilePath ("{0}\{1}" -f $directory, $fileName.Replace($fileName, ($fileName + ".Formatted.ps1")))
@@ -41,19 +40,17 @@ try {
     }
 
     $analyzedResults = $null
-    if ($ScriptAnalyzer)
-    {
+    if ($ScriptAnalyzer) {
         $analyzedResults = Invoke-ScriptAnalyzer -Path $ScriptLocation
     }
 
     $results = [PSCustomObject]@{
-        StringContent = $stringContent
+        StringContent   = $stringContent
         FormattedScript = $formattedScript
         AnalyzedResults = $analyzedResults
     }
 
     return $results
-}
-catch {
+} catch {
     throw
 }
