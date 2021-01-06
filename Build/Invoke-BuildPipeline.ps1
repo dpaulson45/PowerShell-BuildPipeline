@@ -36,7 +36,7 @@ if ($CodeFormatCheck) {
                     $allFiles += $item.VersionInfo.FileName
                 }
             }
-        } elseif ($allFiles.Contains($path)) {
+        } elseif (!$allFiles.Contains($path)) {
             $allFiles += (Get-ChildItem $path).VersionInfo.FileName
         }
     }
